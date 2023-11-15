@@ -32,32 +32,18 @@ def start(message: types.Message):
 
 def next_button() -> types.InlineKeyboardMarkup:
     markup = types.InlineKeyboardMarkup(row_width=1)
-    next = types.InlineKeyboardButton('>', callback_data='next')
+    next = types.InlineKeyboardButton('→', callback_data='next')
     markup.add(next)
     return markup
-
 #↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-# @bot.callback_query_handler(func=lambda call: True)
-# def next_choose(call: types.CallbackQuery):
-#     if call.data == next_button():  # переход к choose
-#         markup = types.InlineKeyboardMarkup(row_width=1)
-#         next = types.InlineKeyboardButton(next_button(), commands='choose')
-#         markup.add(next)
-#         bot.send_message(call.message.chat.id, 'Next', reply_markup=markup)
+def next_choose(call: types.CallbackQuery):
+    if call.data == next_button():
+        print('True')# переход к choose
+        markup = types.InlineKeyboardMarkup(row_width=1)
+        next = types.InlineKeyboardButton(next_button(), callback_data='next')
+        markup.add(next)
+        bot.send_message(call.message.chat.id, 'Next', reply_markup=markup)
 
-# @bot.message_handler(commands=['next'])
-# def button(message):
-#     markup = types.InlineKeyboardMarkup(row_width=1)
-#     rand_route = types.InlineKeyboardButton('Случайный маршрут', callback_data='rand_route')
-#     top10m = types.InlineKeyboardButton('Топ 10 маршрутов', callback_data='top10m')
-#     next1 = types.InlineKeyboardButton('Продолжить подбор маршрута', callback_data='next1')
-#     markup.add(rand_route, top10m, next1)
-#     # Текст, выводимый над кнопками
-#     bot.send_message(message.chat.id, "Всем пользователям данного бота - добро пожаловать!🙂\n"
-#                                       "Он будет для вас незаменимым путеводителем в любой точке России. "
-#                                       "Попробуйте и убедитесь сами!", reply_markup=markup)
-# def next_start(message: types.CallbackQuery):
-#     if message.data == next_button():  #если срабатывает нажатие next_button
 
 # # --------------------------------------------------------------------------------------------------------------------
 
@@ -82,13 +68,13 @@ def button(message):
 def callback(call: types.CallbackQuery):
     if call.data == 'rand_route':  # рандомное определение города для поездки
         markup = types.InlineKeyboardMarkup(row_width=1)
-        next = types.InlineKeyboardButton('Next', callback_data='next1')
+        next = types.InlineKeyboardButton('→', callback_data='next1')
         markup.add(next)
         bot.send_message(call.message.chat.id, random.choice(variants), reply_markup=markup)
 
     if call.data == 'top10m':  # топ 10 городов
         markup = types.InlineKeyboardMarkup(row_width=1)
-        next = types.InlineKeyboardButton('Next', callback_data='next1')
+        next = types.InlineKeyboardButton('→', callback_data='next1')
         markup.add(next)
         bot.send_message(call.message.chat.id, top10, reply_markup=markup)
 
@@ -102,17 +88,37 @@ def callback(call: types.CallbackQuery):
     ####↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
     if call.data == 'next1':
         markup = types.InlineKeyboardMarkup(row_width=1)
-        t1 = types.InlineKeyboardButton('Субтропический:\nиюль:+22, январь:+6', callback_data='t1')
-        t2 = types.InlineKeyboardButton('Муссонный:\nиюль:+16, январь:-16', callback_data='t2')
-        t3 = types.InlineKeyboardButton('Резко-континентальный:\nиюль:+18, январь:-40', callback_data='t3')
-        t4 = types.InlineKeyboardButton('Континентальный:\nиюль:+18, январь:-20', callback_data='t4')
-        t5 = types.InlineKeyboardButton('Умеренно-континентальный:\nиюль:+18, январь:-10', callback_data='t5')
-        t6 = types.InlineKeyboardButton('Субарктический:\nиюль:+12, январь:-32', callback_data='t6')
-        t7 = types.InlineKeyboardButton('Арктический:\nиюль:+6, январь:-28', callback_data='t7')
-        next = types.InlineKeyboardButton('>', callback_data='next')
-        markup.add(t1, t2, t3, t4, t5, t6, t7, next)
+        k1 = types.InlineKeyboardButton('Субтропический:\nиюль:+22, январь:+6', callback_data='k1')
+        k2 = types.InlineKeyboardButton('Муссонный:\nиюль:+16, январь:-16', callback_data='k2')
+        k3 = types.InlineKeyboardButton('Резко-континентальный:\nиюль:+18, январь:-40', callback_data='k3')
+        k4 = types.InlineKeyboardButton('Континентальный:\nиюль:+18, январь:-20', callback_data='k4')
+        k5 = types.InlineKeyboardButton('Умеренно-континентальный:\nиюль:+18, январь:-10', callback_data='k5')
+        k6 = types.InlineKeyboardButton('Субарктический:\nиюль:+12, январь:-32', callback_data='k6')
+        k7 = types.InlineKeyboardButton('Арктический:\nиюль:+6, январь:-28', callback_data='k7')
+        next2 = types.InlineKeyboardButton('→', callback_data='next2')
+        markup.add(k1, k2, k3, k4, k5, k6, k7, next2)
         bot.send_message(call.message.chat.id, 'Укажите подходящий температурный диапазон', reply_markup=markup)
         #bot.send_message(call.message.chat.id, 'fvdv', reply_markup=next_button2())
+
+    #Часовой пояс
+    if call.data == 'next2':
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        t1 = types.InlineKeyboardButton('-1 от МСК', callback_data='t1')
+        t2 = types.InlineKeyboardButton('0 от МСК', callback_data='t2')
+        t3 = types.InlineKeyboardButton('+1 к МСК', callback_data='t3')
+        t4 = types.InlineKeyboardButton('+2 к МСК', callback_data='t4')
+        t5 = types.InlineKeyboardButton('+3 к МСК', callback_data='t5')
+        t6 = types.InlineKeyboardButton('+4 к МСК', callback_data='t6')
+        t7 = types.InlineKeyboardButton('+5 к МСК', callback_data='t7')
+        t8 = types.InlineKeyboardButton('+6 к МСК', callback_data='t8')
+        t9 = types.InlineKeyboardButton('+7 к МСК', callback_data='t9')
+        t10 = types.InlineKeyboardButton('+8 к МСК', callback_data='t10')
+        t11 = types.InlineKeyboardButton('+9 к МСК', callback_data='t11')
+        next3 = types.InlineKeyboardButton('→', callback_data='next3')
+        markup.add(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, next3)
+        bot.send_message(call.message.chat.id, 'Выберите подходящий часовой пояс', reply_markup=markup)
+        #bot.edit_message_text(call.message.chat.id, call.message.id, reply_markup=None)
+
 
 def next_button2():
     markup = types.InlineKeyboardMarkup()
@@ -120,13 +126,6 @@ def next_button2():
     markup.add(next)
     return markup
 
-
-    # if call.data == 't1' or 't2'or't3'or't4'or't5'or't6':
-    #     bot.send_message()
-
-
-
-    
 
         ################# ЗАДАНИЕ: Разделить next1 на отдельные разделы, по типу УКАЖИТЕ ПОДХОДЯЩИЙ КЛИМАТ и выводятся варианты выбора,
         # затем после того, как пользователь выбирает выводится новое окно с заглавием ТЕРРИТОРИАЛЬНАЯ ЗОНА....
@@ -143,19 +142,13 @@ def on_click_Next(call):
         markup.add(climate, zone, budget)
         bot.send_message(call.data.call.id, 'Выберите действие: ', reply_markup=markup)
 
-
 #↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
-
-
 if __name__ == '__main__':
-
     while True:
         try:
-
             bot.polling(none_stop=True)
         except any as e:
             print(e)
-
 # Запуск бота
 bot.polling(none_stop=True, interval=0)
