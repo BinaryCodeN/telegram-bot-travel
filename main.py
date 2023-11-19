@@ -102,7 +102,7 @@ def callback(call: types.CallbackQuery):
 
     #Часовой пояс
     if call.data == 'next2':
-        markup = types.InlineKeyboardMarkup(row_width=2)
+        markup = types.InlineKeyboardMarkup(row_width=3)
         t1 = types.InlineKeyboardButton('-1 от МСК', callback_data='t1')
         t2 = types.InlineKeyboardButton('0 от МСК', callback_data='t2')
         t3 = types.InlineKeyboardButton('+1 к МСК', callback_data='t3')
@@ -116,8 +116,23 @@ def callback(call: types.CallbackQuery):
         t11 = types.InlineKeyboardButton('+9 к МСК', callback_data='t11')
         next3 = types.InlineKeyboardButton('→', callback_data='next3')
         markup.add(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, next3)
-        bot.send_message(call.message.chat.id, 'Выберите подходящий часовой пояс', reply_markup=markup)
+        bot.send_message(call.message.chat.id, 'Выберите подходящий часовой пояс:', reply_markup=markup)
         #bot.edit_message_text(call.message.chat.id, call.message.id, reply_markup=None)
+
+    if call.data == 'next3':
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        c1 = types.InlineKeyboardButton('до 3000р.', callback_data='с1')
+        c2 = types.InlineKeyboardButton('от 3000р. до 5000р.', callback_data='с2')
+        c3 = types.InlineKeyboardButton('от 5000р. до 7000р.', callback_data='с3')
+        c4 = types.InlineKeyboardButton('от 7000 до 10000р.', callback_data='с4')
+        c5=types.InlineKeyboardButton('от 10000 до 13000р.', callback_data='с5')
+        c6=types.InlineKeyboardButton('от 13000 до 16000р.', callback_data='с6')
+        c7= types.InlineKeyboardButton('от 16000 до 19000р.', callback_data='с7')
+        c8 = types.InlineKeyboardButton('от 19000 до 24000р.', callback_data='с8')
+        next4 = types.InlineKeyboardButton('→', callback_data='next4')
+
+        markup.add(c1, c2, c3, c4, c5, c6, c7, c8, next4)
+        bot.send_message(call.message.chat.id, 'Последним этапом подбора маршрута будет расчет бюджета:', reply_markup=markup)
 
 
 def next_button2():
