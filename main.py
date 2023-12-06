@@ -365,7 +365,8 @@ def p(message: types.Message):
     towns_subar4 = []
     towns_subar6 = []
     towns_subar8 = ['Певек', 'Анадырь', 'Хатанга', 'Среднеколымск']
-    towns_subar9 = ['Мурманск', 'Салехард', 'Анадырь', 'Норильск', 'Кировск', 'Якутск', 'Томск', 'Ханты-Мансийск', 'Чита']
+    towns_subar9 = ['Мурманск', 'Салехард', 'Анадырь', 'Норильск', 'Кировск', 'Якутск', 'Томск', 'Ханты-Мансийск',
+                    'Чита']
     towns_arct4 = []
     towns_arct6 = []
     towns_arct7 = []
@@ -380,8 +381,8 @@ def p(message: types.Message):
                    'Субарктический': {'0': towns_subar0, '+2': towns_subar2, '+4': towns_subar4, '+6': towns_subar6,
                                       '+8': towns_subar8, '+9': towns_subar9},
                    'Арктический': {'+4': towns_arct4, '+6': towns_arct6, '+7': towns_arct7, '+8': towns_arct8,
-                                   '+9': towns_arct9}} #['+4', '+6', '+7', '+8', '+9']
-    #dict_cities = {'Субтропический': {'-1': townssub, '0': townssub0, '+1': townssub1, '+2': townssub2}, 'Мусонный': {'+6': townsmus6, '+7': townsmus7, '+8': townsmus8}, 'Резко-континентальный': {'+2': , '+3': ,'+4': }}
+                                   '+9': towns_arct9}}  # ['+4', '+6', '+7', '+8', '+9']
+    # dict_cities = {'Субтропический': {'-1': townssub, '0': townssub0, '+1': townssub1, '+2': townssub2}, 'Мусонный': {'+6': townsmus6, '+7': townsmus7, '+8': townsmus8}, 'Резко-континентальный': {'+2': , '+3': ,'+4': }}
 
     climate = for_button_dict[message.chat.id]['климат']
     time = for_button_dict[message.chat.id]['время']
@@ -396,8 +397,9 @@ def p(message: types.Message):
             cities += ('\n' + str(len(used_cities)) + '. ' + dict_cities[climate][time][r])
     item = types.InlineKeyboardButton(text='Далее', callback_data='next4')
     inline_markup = types.InlineKeyboardMarkup().add(item)
-    #bot.send_message(chat_id=message.chat.id, text = cities, reply_markup=inline_markup)
-    bot.edit_message_text(text=cities, message_id=message.message_id, chat_id=message.chat.id, reply_markup=inline_markup)
+    # bot.send_message(chat_id=message.chat.id, text = cities, reply_markup=inline_markup)
+    bot.edit_message_text(text=cities, message_id=message.message_id, chat_id=message.chat.id,
+                          reply_markup=inline_markup)
 
 
 # def for_times(call):
