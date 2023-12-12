@@ -17,7 +17,7 @@ def first_step(message: telebot.types.Message, bot: telebot.TeleBot) -> None:
 
 def second_step(message: telebot.types.Message, bot: telebot.TeleBot) -> None:
     dictionary[message.chat.id].append(message.text)
-    bot.send_message(message.chat.id, "Введите введите любой из четырех вариантов город прибытия: ")
+    bot.send_message(message.chat.id, "Введите введите любой из трёх вариантов город прибытия: ")
     bot.register_next_step_handler(message, third_step, bot)
 
 
@@ -37,20 +37,29 @@ def fourth_step(message: telebot.types.Message, bot: telebot.TeleBot) -> None:
 
 
 def fifth_step(message: telebot.types.Message, bot: telebot.TeleBot) -> None:
+    print('запуск fifth_step')
     if message.text == 'Нет' or message.text == 'нет':
         bot.send_message(message.chat.id,
                          f"Вы ввели {dictionary[message.chat.id][0]} - {dictionary[message.chat.id][1]} {dictionary[message.chat.id][2]} "
                          f"\nВыполняется поиск авиабилета...")
+
         try:
             from_where = air[dictionary[message.chat.id][0]]
             where_to = air[dictionary[message.chat.id][1]]
             departure = dictionary[message.chat.id][2]
             rez: str = choose_ticket(from_where=from_where, where_to=where_to, departure_at=departure)
-            bot.send_message(message.chat.id, f"Ваш билет найден:\n\n{rez}")
+
+            markup = types.ReplyKeyboardMarkup()
+            button_geo = types.KeyboardButton(text='Геолокация', request_location=True)
+            markup.add(button_geo)
+
+            bot.send_message(message.chat.id, f"Ваш билет найден:\n\n{rez}", reply_markup=markup)
 
         except Exception as e:
             print(e)
             bot.send_message(message.chat.id, 'Вы ввели неверный город или дату, попробуйте ещё раз')
+
+
 
     else:
         dictionary[message.chat.id].append(message.text)
@@ -65,6 +74,16 @@ def fifth_step(message: telebot.types.Message, bot: telebot.TeleBot) -> None:
             rez: str = choose_ticket(from_where=from_where, where_to=where_to, departure_at=departure,
                                      return_at=return_at)
             bot.send_message(message.chat.id, f"Ваш билет найден:\n\n{rez}")
+
+            markup = types.ReplyKeyboardMarkup()
+            button_geo = types.KeyboardButton(text='Геолокация', request_location=True)
+            markup.add(button_geo)
+
+            bot.send_message(chat_id=message.chat.id,
+                             text="Далее вы можете посмотреть маршрут на карте до выбранного пункта\n"
+                                  "Для этого отправьте свою геолокацию, чтобы построить маршрут от выбранной точки: ",
+                             reply_markup=markup)
+
         except Exception as e:
             print(e)
             bot.send_message(message.chat.id, "Вы ввели неверный город или дату, попробуйте с другой датой")
@@ -75,7 +94,16 @@ def fifth_step(message: telebot.types.Message, bot: telebot.TeleBot) -> None:
                                   reply_markup=markup)
 
 
+'''def six_step(message: telebot.types.Message, bot: telebot.TeleBot):
+    dictionary[message.chat.id].append(message.text)
+    print(dictionary[message.chat.id].append(message.text))
+    bot.send_message(chat_id=message.chat.id, text='Далее вы можете посмотреть маршрут на карте до выбранного пункта')
+    print(six_step(message, bot))'''
+
+
 # Работа непосредственно с API
+
+
 def choose_ticket(from_where: str, where_to: str, departure_at: str, return_at: None | str = None) -> str:
     print(from_where, where_to, departure_at, return_at)
 
@@ -96,52 +124,19 @@ def choose_ticket(from_where: str, where_to: str, departure_at: str, return_at: 
             pass
         tickets = response.json()['data'][where_to][ass_index]
         if return_at is None:
-            # tickets = f"Цена: {tickets['price']}₽\nДата отпраления:\n{tickets['departure_at'][:10] + ' ' + tickets['departure_at'][11:19]+ ' ' + tickets['departure_at'][19:]} ({avia[tickets['airline']]})"
-            tickets = f"Цена: {tickets['price']}₽\nДата отпраления:\n{tickets['departure_at'][:10] + ' ' + tickets['departure_at'][11:19]} \nЧасовой пояс: {tickets['departure_at'][19:]} \nАвиакампания: {avia[tickets['airline']]}"
-
-            # tickets = f"Цена: {tickets['price']}₽\nДата отпраления:\n{tickets['departure_at'][:10] + ' ' + tickets['departure_at'][11:19]+ ' ' + '\n Часовой пояс:' + tickets['departure_at'][19:]} ({avia[tickets['airline']]})"
+            tickets = f"Цена: {tickets['price']}₽\nДата отправления:\n{tickets['departure_at'][:10] + ' ' + tickets['departure_at'][11:19]} \nЧасовой пояс: {tickets['departure_at'][19:]} \nАвиакампания: {avia[tickets['airline']]}"
 
         else:
-            # tickets = f"Цена: {tickets['price']}₽\nДата отпраления:\n{tickets['departure_at'][:10] + ' ' + tickets['departure_at'][11:19]+ ' ' + tickets['departure_at'][19:]} ({avia[tickets['airline']]}) \n\nДата отправления обратно:\n{tickets['return_at'][:10] + tickets['return_at'][11:]} ({avia[tickets['airline']]})"
-            tickets = f"Цена: {tickets['price']}₽\nДата отпраления:\n{tickets['departure_at'][:10] + ' ' + tickets['departure_at'][11:19]} \nЧасовой пояс: {tickets['departure_at'][19:]} \nАвиакампания: {avia[tickets['airline']]} \n\nДата отправления обратно: \n{tickets['return_at'][:10] + ' ' + tickets['return_at'][11:19]} \nЧасовой пояс: {tickets['return_at'][19:]} \nАвиакампания: {avia[tickets['airline']]}"
+            tickets = f"Цена: {tickets['price']}₽\nДата отправления:\n{tickets['departure_at'][:10] + ' ' + tickets['departure_at'][11:19]} \nЧасовой пояс: {tickets['departure_at'][19:]} \nАвиакампания: {avia[tickets['airline']]} \n\nДата отправления обратно: \n{tickets['return_at'][:10] + ' ' + tickets['return_at'][11:19]} \nЧасовой пояс: {tickets['return_at'][19:]} \nАвиакампания: {avia[tickets['airline']]}"
 
         return tickets
 
 
-# air: dict[str, str] = {"Абакан": "ABA", "Алдан": "ADH", "Амдерма": "AMV", "Анадырь": "DYR", "Анапа": "AAQ",
-#                        "Апатиты": "KVK", "Астрахань": "ASF", "Ачинск": "ACS	", "Барнаул": "BAX", "Белорецк": "BCX",
-#                        "Благовещенск": "BQS", "Бор": "TGP", "Бугульма": "UUA", "Великие Луки": "VLU",
-#                        "Великий Устюг": "VUS",
-#                        "Владивосток": "VVO", "Владикавказ	": "OGZ", "Воркута": "VKT", "Воронеж": "VOZ",
-#                        "Геленджик": "GDZ",
-#                        "Грозный": "GRV", "Екатеринбург": "SVX", "Енисейск": "EIE", "Иваново": "IWA", "Ижевск": "IJK",
-#                        "Иркутск": "IKT", "Казань": "KZN", "Калининград": "KGD", "Кемерово": "KEJ", "Когалым": "KGP",
-#                        "Кострома": "KMW", "Котлас": "KSZ",
-#                        "Краснодар": "KRR", "Красноярск": "KJA", "Курган": "KRO", "Курильск": "BVV", "Курск": "URS",
-#                        "Кызыл": "KYZ",
-#                        "Липецк": "LPK", "Магадан": "GDX", "Магдагачи": "GDG", "Махачкала": "MCX", "Мирный": "MJZ",
-#                        "Жуковский": "ZIA",
-#                        "Внуково": "VKO", "Шереметьево": "SVO",
-#                        "Быково": "BKA", "Мурманск": "MMK", "Нарьян-Мар": "NNM", "Нерюнгри": "CNN",
-#                        "Нижневартовск": "NJC",
-#                        "Нижнекамск": "NBC", "Нижний-Новгород": "GOJ", "Новокузнецк": "NOZ", "Новый Уренгой": "NUX",
-#                        "Ноглики": "NGL", "Новосибирск": "OVB",
-#                        "Норильск": "NSK", "Ноябрьск": "NOJ", "Омск": "OMS", "Орёл": "OEL", "Оренбург": "REN",
-#                        "Орск": "OSW", "Оха": "OHH",
-#                        "Пермь": "PEE", "Петрозаводск": "PES", "Печора": "PEX", "Провидения": "PVS", "Псков": "PKV",
-#                        "Радужный": "RAT",
-#                        "Рыбинск": "RYB", "Рязань": "RZN", "Самара": "KUF", "Саранск": "SKX", "Саратов": "RTW",
-#                        "Смоленск": "LNX", "Советская Гавань": "GVN", "Сочи": "AER", "Соловецкие острова": "CSH",
-#                        "Ставрополь": "STW",
-#                        "Сыктывкар	": "SCW", "Санкт-Петербург": "LED", "Севастополь": 'UKS',
-#                        "Тикси": "IKS", "Тобольск": "TOX", "Томск": "TOF", "Тында": "TYD", "Тюмень": "TJM",
-#                        "Удачный": "PYJ",
-#                        "Улан-Удэ": "UUD", "Ульяновск": "ULY", "Усть-Кут": "UKX", "Уфа": "UFA", "Ухта": "UCT",
-#                        "Хабаровск": "KHV",
-#                        "Ханты-Мансийск": "HMA", "Цимлянск": "VLK", "Чебоксары": "CSY", "Челябинск": "CEK",
-#                        "Череповец": "CEE",
-#                        "Черский": "CYX", "Чита": "HTA", "Чокурдах": "CKH", "Щёлково": "CKL", "Элиста": "ESL",
-#                        "Южно-Курильск": "DEE", "Якутск": "YKS", "Ярославль": "IAR"}
+def six_step(message: telebot.types.Message, bot: telebot.TeleBot) -> None:
+    print('запуск six_step')
+    # dictionary[message.chat.id].append(message.text)
+    bot.send_message(chat_id=message.chat.id, text="Далее вы можете посмотреть маршрут на карте до выбранного пункта")
+
 
 air: dict[str, str] = {'Абакан': 'ABA', 'Алдан': 'ADH', 'Амдерма': 'AMV', 'Анадырь': 'DYR', 'Анапа': 'AAQ',
                        'Апатиты': 'KVK', 'Архангельск': 'ARH', 'Астрахань': 'ASF', 'Ачинск': 'ACS', 'Барнаул': 'BAX',
@@ -155,15 +150,17 @@ air: dict[str, str] = {'Абакан': 'ABA', 'Алдан': 'ADH', 'Амдерм
                        'Кострома': 'KMW', 'Котлас': 'KSZ', 'Краснодар': 'KRR', 'Красноярск': 'KJA', 'Курган': 'KRO',
                        'Курильск': 'BVV', 'Курск': 'URS', 'Кызыл': 'KYZ', 'Лешуконское': 'LDG', 'Липецк': 'LPK',
                        'Магадан': 'GDX', 'Магдагачи': 'GDG', 'Магнитогорск': 'MQF', 'Махачкала': 'MCX',
-                       'Минеральные Воды': 'MRV', 'Мирный': 'MJZ', 'Москва': 'BKA', 'Москва': 'VKO', 'Москва': 'DME',
-                       'Москва': 'SVO', 'Мурманск': 'MMK', 'Надым': 'NYM', 'Нальчик': 'NAL', 'Нарьян-Мар': 'NNM',
+                       'Минеральные Воды': 'MRV', 'Мирный': 'MJZ', 'Москва Быково': 'BKA', 'Москва Внуково': 'VKO',
+                       'Москва Домодедово': 'DME',
+                       'Москва Шереметьево': 'SVO', 'Жуковский': 'ZIA', 'Мурманск': 'MMK', 'Надым': 'NYM',
+                       'Нальчик': 'NAL', 'Нарьян-Мар': 'NNM',
                        'Нерюнгри': 'CNN', 'Нижневартовск': 'NJC', 'Нижнекамск': 'NBC', 'Нижний Новгород': 'GOJ',
                        'Новокузнецк': 'NOZ', 'Новосибирск': 'OVB', 'Новый Уренгой': 'NUX', 'Ноглики': 'NGL',
                        'Норильск': 'NSK', 'Ноябрьск': 'NOJ', 'Октябрьский': 'OKT', 'Омск': 'OMS', 'Орёл': 'OEL',
                        'Оренбург': 'REN', 'Орск': 'OSW', 'Оха': 'OHH', 'Охотск': 'OHO', 'Певек': 'PWE', 'Пенза': 'PEZ',
                        'Пермь': 'PEE', 'Петрозаводск': 'PES', 'Петропавловск-Камчатский': 'PKC', 'Печора': 'PEX',
                        'Провидения': 'PVS', 'Псков': 'PKV', 'Радужный': 'RAT', 'Ростов-на-Дону': 'ROV',
-                       'Рыбинск': 'RYB', 'Рязань': 'RZN', 'Рязань': 'RZN', 'Салехард': 'SLY', 'Самара': 'KUF',
+                       'Рыбинск': 'RYB', 'Рязань': 'RZN', 'Салехард': 'SLY', 'Самара': 'KUF',
                        'Санкт-Петербург': 'LED', 'Саранск': 'SKX', 'Саратов': 'RTW', 'Смоленск': 'LNX',
                        'Советская Гавань': 'GVN', 'Соловецкие острова': 'CSH', 'Сочи': 'AER', 'Ставрополь': 'STW',
                        'Сургут': 'SGC', 'Сыктывкар': 'SCW', 'Тамбов': 'TBW', 'Тикси': 'IKS', 'Тобольск': 'TOX',
@@ -189,7 +186,6 @@ avia = {'KC': 'Air Astana', 'BT': 'AirBaltic', 'ZM': 'Air Manas', '9U': 'Air Mol
         'U6': 'Уральские авиалинии', 'AY': 'ФиннЭйр', 'ZP': 'Шелковый путь (Silk Way Airlines)', 'RU': 'ЭйрБриджКарго',
         'RT': 'ЮВТ Аэро', 'UT': 'ЮТэйр', 'R3': 'Якутия', 'YС': 'Ямал АТК'}
 
-#
 # #@bot.callback_query_handler(func=lambda call: True)
 # def handler(call: telebot.types.CallbackQuery) -> None:
 #     if call.data == 'change_city':
