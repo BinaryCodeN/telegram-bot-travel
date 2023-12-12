@@ -1,14 +1,15 @@
-# Бот будет незаменимым помошником для подбора увлекательного маршрута
+# Бот будет незаменимым помощником для подбора увлекательного маршрута
 # В планах:
-# При выводе топ 10 показывать только список городов и ,если человека какой-то из этих городов заинтересует, в ссылке
+# При выводе топ 10 показывать только список городов и, если человека какой-то из этих городов заинтересует, в ссылке
 # под этим городом вывести текст
 
 import telebot
 import random
 from telebot import types
 from cities import variants, top10
-from API import bot_tg_API
+from API import bot_tg_API, yandex_api_key
 from Aviasales import first_step
+import requests
 
 bot: telebot.TeleBot = telebot.TeleBot(bot_tg_API)
 
@@ -27,12 +28,12 @@ def start(message: types.Message):
     if message.from_user.last_name is not None and message.from_user.first_name is not None:
         bot.send_message(message.chat.id,
                          f"Здравствуйте, {message.from_user.first_name} {message.from_user.last_name}! \nЧтобы"
-                         f"продолжить подбор города, нажмите '→' или выберите команду \n /choose из списка 'Меню'",
+                         f"продолжить подбор города, нажмите '→' или выберите команду /choose из списка 'Меню'",
                          reply_markup=next_button())
     elif message.from_user.last_name is None and message.from_user.first_name is not None:
         bot.send_message(message.chat.id,
                          f"Здравствуй, {message.from_user.first_name}! \nЧтобы продолжить подбор города, "
-                         f"нажмите '→' или выберите команду \n /choose из списка 'Меню'",
+                         f"нажмите '→' или выберите команду /choose из списка 'Меню'",
                          reply_markup=next_button())
 
 
@@ -60,7 +61,7 @@ def start_choose(message: types.Message):
 
 # Действия при нажатиии кнопки "CHOOSE"
 @bot.message_handler(commands=['choose'])
-def button(message):  # действия для связки с ПРОДОЛЖИТЬ ПОДБОР МАРШРУТА
+def button(message):  # действия для связки с "ПРОДОЛЖИТЬ ПОДБОР МАРШРУТА"
     start_choose(message)
 
 
@@ -97,7 +98,7 @@ def callback(call: types.CallbackQuery):
                                         callback_data='Умеренно-континентальный')
         k6 = types.InlineKeyboardButton('Субарктический:\nиюль:+12, январь:-32', callback_data='Субарктический')
         k7 = types.InlineKeyboardButton('Арктический:\nиюль:+6, январь:-28', callback_data='Арктический')
-        next2 = types.InlineKeyboardButton('→', callback_data='климат')
+        #next2 = types.InlineKeyboardButton('→', callback_data='климат')
         back1 = types.InlineKeyboardButton('←', callback_data='back1')
         markup.add(k1)
         markup.add(k2)
@@ -106,7 +107,7 @@ def callback(call: types.CallbackQuery):
         markup.add(k5)
         markup.add(k6)
         markup.add(k7)
-        markup.add(back1, next2)
+        markup.add(back1)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                               text='Укажите подходящий температурный диапазон', reply_markup=markup)
     elif call.data == 'back1':
@@ -124,7 +125,7 @@ def callback(call: types.CallbackQuery):
         item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next2')
         back = types.InlineKeyboardButton(text='←', callback_data='next1')
         inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Выберите подходящий часовой пояс:', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=time_buttons(['0', '+1']))
         for_button_dict[call.message.chat.id]['климат'] = 'Субтропический'
         # bot.message_handler()
@@ -134,7 +135,7 @@ def callback(call: types.CallbackQuery):
         item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next2')
         back = types.InlineKeyboardButton(text='←', callback_data='next1')
         inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Выберите подходящий часовой пояс:', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=time_buttons(['+7', '+8', '+9']))
         for_button_dict[call.message.chat.id]['климат'] = 'Мусонный'
 
@@ -143,8 +144,8 @@ def callback(call: types.CallbackQuery):
         item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next2')
         back = types.InlineKeyboardButton(text='←', callback_data='next1')
         inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
-                              reply_markup=time_buttons(['+4', '+5', '+6']))
+        bot.edit_message_text(text='Выберите подходящий часовой пояс:', message_id=call.message.message_id, chat_id=call.message.chat.id,
+                              reply_markup=time_buttons(['+2', '+3', '+4', '+5']))
         for_button_dict[call.message.chat.id]['климат'] = 'Резко-континентальный'
 
     elif call.data == 'Континентальный':
@@ -152,8 +153,8 @@ def callback(call: types.CallbackQuery):
         item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next2')
         back = types.InlineKeyboardButton(text='←', callback_data='next1')
         inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
-                              reply_markup=time_buttons(['+2', '+3']))
+        bot.edit_message_text(text='Выберите подходящий часовой пояс:', message_id=call.message.message_id, chat_id=call.message.chat.id,
+                              reply_markup=time_buttons(['+2', '+3', '+4']))
         for_button_dict[call.message.chat.id]['климат'] = 'Континентальный'
 
     elif call.data == 'Умеренно-континентальный':
@@ -161,7 +162,7 @@ def callback(call: types.CallbackQuery):
         item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next2')
         back = types.InlineKeyboardButton(text='←', callback_data='next1')
         inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Выберите подходящий часовой пояс:', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=time_buttons(['-1', '0', '+1', '+2']))
         for_button_dict[call.message.chat.id]['климат'] = 'Умеренно-континентальный'
 
@@ -170,8 +171,8 @@ def callback(call: types.CallbackQuery):
         item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next2')
         back = types.InlineKeyboardButton(text='←', callback_data='next1')
         inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
-                              reply_markup=time_buttons(['0', '+2', '+4', '+6', '+8', '+9']))
+        bot.edit_message_text(text='Выберите подходящий часовой пояс: ', message_id=call.message.message_id, chat_id=call.message.chat.id,
+                              reply_markup=time_buttons(['0', '+2', '+8', '+9']))
         for_button_dict[call.message.chat.id]['климат'] = 'Субарктический'
 
     elif call.data == 'Арктический':
@@ -179,8 +180,8 @@ def callback(call: types.CallbackQuery):
         item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next2')
         back = types.InlineKeyboardButton(text='←', callback_data='next1')
         inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
-                              reply_markup=time_buttons(['+4', '+6', '+7', '+8', '+9']))
+        bot.edit_message_text(text= 'Выберите подходящий часовой пояс:', message_id=call.message.message_id, chat_id=call.message.chat.id,
+                              reply_markup=time_buttons(['+7', '+8', '+9']))
         for_button_dict[call.message.chat.id]['климат'] = 'Арктический'
         print(for_button_dict)
 
@@ -206,65 +207,79 @@ def callback(call: types.CallbackQuery):
         # bot.edit_message_text(call.message.chat.id, call.message.id, reply_markup=None)
 
     elif call.data == '-1':
-        inline_markup1 = types.InlineKeyboardMarkup()
-        item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next3')
-        back = types.InlineKeyboardButton(text='←', callback_data='next2')
-        inline_markup1.add(back, item_alone)
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
-                              reply_markup=inline_markup1)
+        # inline_markup1 = types.InlineKeyboardMarkup()
+        # item_alone = types.InlineKeyboardButton(text=call.data, callback_data='next3')
+        # back = types.InlineKeyboardButton(text='←', callback_data='next2')
+        # inline_markup1.add(back, item_alone)
+        # bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        #                       reply_markup=inline_markup1)
+
         # bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
         #                       reply_markup=for_time(call))
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
+                              reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '-1'
         print(for_button_dict)
 
     elif call.data == '0':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '0'
 
     elif call.data == '+1':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+1'
 
     elif call.data == '+2':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+2'
         print(for_button_dict)
 
     elif call.data == '+3':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+3'
 
     elif call.data == '+4':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+4'
 
     elif call.data == '+5':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+5'
 
     elif call.data == '+6':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+6'
 
     elif call.data == '+7':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+7'
 
     elif call.data == '+8':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+8'
 
     elif call.data == '+9':
-        bot.edit_message_text(text=call.message.text, message_id=call.message.message_id, chat_id=call.message.chat.id,
+        bot.edit_message_text(text='Далее вы можете продолжить построение маршрута или'
+                                   '\nвернуться к выбору климата', message_id=call.message.message_id, chat_id=call.message.chat.id,
                               reply_markup=for_time(call))
         for_button_dict[call.message.chat.id]['время'] = '+9'
 
@@ -346,60 +361,110 @@ def for_time(call):
 # @bot.message_handler(commands=['p'])
 def p(message: types.Message):
     towns_sub0 = ['Сочи', 'Туапсе', 'Анапа', 'Геленджик', 'Ялта', 'Новороссийск', 'Севастополь', 'Магас']
-    towns_sub1 = ['Самара', 'Ижевск', 'fgdfgd', 'dvv']
-    towns_mus9 = ['Благовещенск', 'Тында', 'Архара', 'gvevw']
+    towns_sub1 = ['Самара', 'Ижевск', 'Ульяновск', 'Нижнекамск']
+    towns_mus9 = ['Благовещенск', 'Тында', 'Архара']
     towns_mus7 = ['Владивосток', 'Хабаровск', 'Николаевск', 'Находка', 'Уссурийск']
     towns_mus8 = ['Южно-Сахалинск', 'Комсомольск-на-Амуре', 'Амурск', 'Нижнетамбовское']
-    towns_rezk2 = ['Новосибирск', 'Красноярск', 'vev', 'ervwvw']
-    towns_rezk3 = []
-    towns_rezk4 = []
-    towns_kont3 = []
-    towns_kont4 = []
-    towns_kont5 = []
-    towns_ymkont = []
-    towns_ymkont0 = []
-    towns_ymkont1 = []
-    towns_ymkont2 = []
-    towns_subar0 = []
-    towns_subar2 = []
-    towns_subar4 = []
-    towns_subar6 = []
-    towns_subar8 = ['Певек', 'Анадырь', 'Хатанга', 'Среднеколымск']
+    towns_rezk2 = ['Новосибирск', 'Красноярск', 'Кемерово', 'Томск']
+    towns_rezk3 = ['Барнаул', 'Горно-Алтайск', 'Новокузнецк']
+    towns_rezk4 = ['Кызыл', 'Абакан', ' Красноярск', 'Ачинск']
+    towns_rezk5 = ['Усть-Илимск', 'Иркутск', 'Улан-Удэ', 'Чита', 'Бодайбо']
+    towns_kont2 = ['Екатеринбург', 'Сургут', 'Челябинск', 'Тюмень', 'Тобольск']
+    towns_kont3 = ['Омск', 'Томск', 'Новосибирск', 'Барнаул']
+    towns_kont4 = ['Норильск', 'Кемерово', 'Красноярск', 'Норильск', 'Ванавара']
+    towns_ymkont0 = ['Калининград', 'Москва Шереметьево/Домодедово/Жуковский/Внуково', 'Вологда', 'Тверь', 'Брянск', 'Орел', 'Курск', 'Санкт-Петербург', 'Псков',
+                     'Смоленск', 'Калуга', 'Воронеж', 'Липецк', 'Казань']
+    # 'Красноярск', 'Иркутск', 'Чита', 'Братск'
+    towns_ymkont1 = ['Самара', 'Волгоград', 'Саратов', 'Ульяновск']
+    towns_ymkont2 = ['Пермь', 'Уфа', 'Оренбург', 'Сыктывкар', 'Печора']
+    towns_subar0 = ['Мурманск', 'Архангельск', 'Сыктывкар', 'Петрозаводск', 'Нарьян-Мар']
+    towns_subar2 = ['Салехард', 'Надым', 'Ноябрьск', 'Муравленко', 'Новый Уренгой']
+    # towns_subar4 = []
+    # towns_subar6 = []
+    towns_subar8 = ['Певек', 'Хатанга', 'Среднеколымск']
     towns_subar9 = ['Мурманск', 'Салехард', 'Анадырь', 'Норильск', 'Кировск', 'Якутск', 'Томск', 'Ханты-Мансийск',
                     'Чита']
-    towns_arct4 = []
-    towns_arct6 = []
-    towns_arct7 = []
-    towns_arct8 = []
-    towns_arct9 = []
+    # towns_arct6 = ['Омск', 'Красноярск']
+    towns_arct7 = ['Норильск', 'Дудинка', 'Новый Уренгой', 'Тазовский', 'Надым']
+    towns_arct8 = ['Певек', 'Анадырь', 'Билибино', 'Магадан', 'Якутск']
+    towns_arct9 = ['Мурманск', 'Норильск', 'Салехард', 'Анадырь', 'Певек']
     dict_cities = {'Субтропический': {'0': towns_sub0, '+1': towns_sub1},
                    'Мусонный': {'+9': towns_mus9, '+7': towns_mus7, '8': towns_mus8},
-                   'Резко-континентальный': {'+2': towns_rezk2, '+3': towns_rezk3, '+4': towns_rezk4},
-                   'Континентальный': {'+3': towns_kont3, '+4': towns_kont4, '+5': towns_kont5},
-                   'Умеренно-континентальный': {'-1': towns_ymkont, '0': towns_ymkont0, '+1': towns_ymkont1,
+                   'Резко-континентальный': {'+2': towns_rezk2, '+3': towns_rezk3, '+4': towns_rezk4,
+                                             '+5': towns_rezk5},
+                   'Континентальный': {'+2': towns_kont2, '+3': towns_kont3, '+4': towns_kont4},
+                   'Умеренно-континентальный': {'-1': towns_ymkont0, '0': towns_ymkont0, '+1': towns_ymkont1,
                                                 '+2': towns_ymkont2},
-                   'Субарктический': {'0': towns_subar0, '+2': towns_subar2, '+4': towns_subar4, '+6': towns_subar6,
-                                      '+8': towns_subar8, '+9': towns_subar9},
-                   'Арктический': {'+4': towns_arct4, '+6': towns_arct6, '+7': towns_arct7, '+8': towns_arct8,
-                                   '+9': towns_arct9}}  # ['+4', '+6', '+7', '+8', '+9']
+                   'Субарктический': {'0': towns_subar0, '+2': towns_subar2, '+8': towns_subar8, '+9': towns_subar9},
+                   'Арктический': {'+7': towns_arct7, '+8': towns_arct8, '+9': towns_arct9}}
+    # ['+4', '+6', '+7', '+8', '+9']
     # dict_cities = {'Субтропический': {'-1': townssub, '0': townssub0, '+1': townssub1, '+2': townssub2}, 'Мусонный': {'+6': townsmus6, '+7': townsmus7, '+8': townsmus8}, 'Резко-континентальный': {'+2': , '+3': ,'+4': }}
 
     climate = for_button_dict[message.chat.id]['климат']
     time = for_button_dict[message.chat.id]['время']
     cities = 'Ваши города прибытия:'
     used_cities = []
-    while len(used_cities) != 4:
+    while len(used_cities) != 3:
         r = random.randint(0, len(dict_cities[climate][time]) - 1)
         if dict_cities[climate][time][r] in used_cities:
             pass
         else:
             used_cities.append(dict_cities[climate][time][r])
             cities += ('\n' + str(len(used_cities)) + '. ' + dict_cities[climate][time][r])
-    item = types.InlineKeyboardButton(text='Далее', callback_data='next4')
-    inline_markup = types.InlineKeyboardMarkup().add(item)
+    item = types.InlineKeyboardButton(text='→', callback_data='next4')
+    item2 = types.InlineKeyboardButton(text='←', callback_data='next1')
+    inline_markup = types.InlineKeyboardMarkup().add(item2, item)
     # bot.send_message(chat_id=message.chat.id, text = cities, reply_markup=inline_markup)
     bot.edit_message_text(text=cities, message_id=message.message_id, chat_id=message.chat.id,
                           reply_markup=inline_markup)
+
+
+@bot.message_handler(content_types=['location'])
+def handle_location(message: telebot.types.Message):
+    # Получаем координаты из сообщения
+    latitude = message.location.latitude
+    longitude = message.location.longitude
+    user_location = f"{longitude}, {latitude}"
+    print(user_location)
+    bot.send_message(message.chat.id, "Теперь отправьте место, до которого построить маршрут: ",
+                     reply_markup=types.ReplyKeyboardRemove())
+
+    bot.register_next_step_handler(message, handle_text, latitude, longitude)
+
+
+def handle_text(message: telebot.types.Message, latitude, longitude):
+    # Получаем адрес от пользователя
+    destination = message.text
+    print(destination)
+
+    # Получаем координаты выбранной точки с помощью Геокодера Яндекс API
+    url = f"https://geocode-maps.yandex.ru/1.x/?apikey={yandex_api_key}&format=json&geocode={destination}&"
+    response = requests.get(url)
+    data = response.json()
+    print(data)
+    coordinates = data['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']
+    print(coordinates)
+    dest_longitude, dest_latitude = map(float, coordinates.split())
+    print(map(float, coordinates.split()))
+    # maps = f"https://yandex.ru/maps/?ll={latitude}%2C{longitude}&mode=routes&rtext={dest_latitude}%2C{dest_longitude}~{latitude}%2C{longitude}&rtt=pd&ruri=ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzAwMDExNxIc0JHQtdC70LDRgNGD0YHRjCwg0JzRltC90YHQuiIKDQ5y3EEVZpxXQg%2C%2C~ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzAwMDA5MxIr0KDQvtGB0YHQuNGPLCDQodCw0L3QutGCLdCf0LXRgtC10YDQsdGD0YDQsyIKDR2F8kEVUcFvQg%2C%2C&z=6.3"
+    # response = requests.get(maps)
+    # data = response.json()
+    # print(data)
+    # Отправляем сообщение с координатами точки и ссылкой на карту
+    bot.send_message(message.chat.id, f"Координаты места: \nШирота {dest_latitude}, Долгота {dest_longitude}")
+    # bot.send_message(message.chat.id,
+    #                  f"Ссылка на карту: \nhttps://yandex.com/maps/?ll={dest_longitude},{dest_latitude}&z=12")
+    bot.send_message(message.chat.id, f'Ссылка на карту: '
+                                      f'\nhttps://yandex.ru/maps/?ll={latitude}%2C{longitude}&mode=routes&routes%5BactiveComparisonMode%5D=auto&routes%5BignoreTravelModes%5D=bicycle%2Cscooter&rtext={dest_latitude}%2C{dest_longitude}~{latitude}%2C{longitude}&rtt=comparison&ruri=ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzE1MjgwNBIr0KDQvtGB0YHQuNGPLCDQodCw0L3QutGCLdCf0LXRgtC10YDQsdGD0YDQsyIKDRSE8kEVNMFvQg%2C%2C~ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzE2NjU2NhI70KDQvtGB0YHQuNGPLCDQmtGA0LDRgdC90L7QtNCw0YDRgdC60LjQuSDQutGA0LDQuSwg0KHQvtGH0LgiCg1z5B5CFYdXLkI%2C&source=serp_navig&z=5')
+                     #f'Ссылка на карту: \nhttps://yandex.ru/maps/?ll={latitude}%2C{longitude}&mode=routes&rtext={dest_latitude}%2C{dest_longitude}~{latitude}%2C{longitude}&rtt=pd&ruri=ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzAwMDExNxIc0JHQtdC70LDRgNGD0YHRjCwg0JzRltC90YHQuiIKDQ5y3EEVZpxXQg%2C%2C~ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzAwMDA5MxIr0KDQvtGB0YHQuNGPLCDQodCw0L3QutGCLdCf0LXRgtC10YDQsdGD0YDQsyIKDR2F8kEVUcFvQg%2C%2C&z=6.3')
+
+    markup = types.InlineKeyboardMarkup()
+    button1 = types.InlineKeyboardButton("📝Оставьте отзыв", url='https://t.me/nensi_m')
+    markup.add(button1)
+    bot.send_message(message.chat.id, 'На этом подбор маршрута подошел к концу. '
+                                      '\nСпасибо всем, кто выбрал данного бота для путешествия✨'.format(message.from_user),
+                     reply_markup=markup)
+    # Теперь можно использовать найденные координаты для построения маршрута или других действий
 
 
 # def for_times(call):
@@ -413,28 +478,13 @@ def p(message: types.Message):
 
 
 # Разработать систему релевантности: (8**11 вариантов) составления вариаций выбора города -> нужно добавить 214 358 881
-# гродов (может быть меньше, в зависимости он универсальности города)
-
-
-# Если пользователь нажал Next, нужно задать наводящие вопросы, по типу: какой климат, зона страны, бюджет
-# Действия для кнопки Next
-# def on_click_Next(call):
-#     if call.data == 'next1':
-#         markup = types.InlineKeyboardMarkup(row_width=1)
-#         # markup = types.InlineKeyboardMarkup(row_width=1)
-#         climate = types.InlineKeyboardButton('Подходящий климат', callback_data='climate')
-#         zone = types.InlineKeyboardButton('Территориальная зона России', callback_data='zone')
-#         budget = types.InlineKeyboardButton('Бюджет', callback_data='budget')
-#         markup.add(climate, zone, budget)
-#         bot.send_message(call.data.call.id, 'Выберите действие: ', reply_markup=markup)
-
+# городов (может быть меньше, в зависимости он универсальности города)
 
 # ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 if __name__ == '__main__':
-    # while True:
-    #     try:
-    #         bot.polling(none_stop=True)
-    #     except Exception as e:
-    #         print(e)
-    #         print('Пи')
-    bot.polling(none_stop=True)
+    while True:
+        try:
+            bot.polling(none_stop=True)
+        except Exception as e:
+            print(e)
+    # bot.polling(none_stop=True)
